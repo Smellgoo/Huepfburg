@@ -8,8 +8,8 @@ import java.util.*;
  */
 public class HistoryObject {
 
-	public BitSet p1 = new BitSet();
-	public BitSet p2 = new BitSet();
+	public final BitSet p1;
+	public final BitSet p2;
 
 	
 	public HistoryObject(BitSet p1, BitSet p2){
@@ -22,10 +22,10 @@ public class HistoryObject {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) {
+		if( this == obj ) {
 			return true;
 		}
-		if (!(obj instanceof HistoryObject)) {
+		if( !(obj instanceof HistoryObject) ) {
 			return false;
 		}
 		HistoryObject other = (HistoryObject) obj;

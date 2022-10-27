@@ -1,6 +1,6 @@
 package connection;
 
-import node.Node;
+import node.*;
 
 /**
  * @author <a href="mailto:Leon.Havel@Materna.DE">Leon Havel</a>
@@ -8,8 +8,8 @@ import node.Node;
  */
 public class Connection {
 
-	public Node source;
-	public Node target;
+	private final Node source;
+	private final Node target;
 
 	public Connection(Node source, Node target) {
 		this.source = source;
@@ -20,32 +20,23 @@ public class Connection {
 		return source;
 	}
 
-	public void setSource(Node source) {
-		this.source = source;
-	}
-
 	public Node getTarget() {
 		return target;
-	}
-
-	public void setTarget(Node target) {
-		this.target = target;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
 
-		if (this == obj) {
+		if( this == obj ) {
 			return true;
 		}
-		if (!(obj instanceof Connection)) {
+		if( !(obj instanceof Connection) ) {
 			return false;
 		}
 		Connection connection = (Connection) obj;
-		if (this.getSource() == connection.getSource() && this.getTarget() == connection.getTarget()) {
+		if( this.getSource() == connection.getSource() && this.getTarget() == connection.getTarget() ) {
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	}
 }

@@ -4,9 +4,9 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
-import connection.Connection;
-import historyobject.HistoryObject;
-import node.Node;
+import connection.*;
+import historyobject.*;
+import node.*;
 
 /**
  * @author <a href="mailto:Leon.Havel@Materna.DE">Leon Havel</a>
@@ -14,27 +14,24 @@ import node.Node;
  */
 public class Huepfburg {
 
-	/**
-	 * Path to the test values
-	 */
-	public final static Path testValuePath = Paths.get("C:/USR/workspace/huepfburg/src/testValues1.txt/");
-	private static List<Node> nodeList = new ArrayList<>();
-	private static List<Connection> connectionList = new ArrayList<>();
-	private static List<HistoryObject> historyObjects = new ArrayList<>();
-	private static List<String> p1Paths = new ArrayList<>();
-	private static List<String> p2Paths = new ArrayList<>();
+	private final static Path testValuePath = Paths.get("src/testValues1.txt/");
+	private final static HashMap<Integer, Node> nodeList = new HashMap<>();
+	private final static HashMap<Integer, Connection> connectionList = new HashMap<>();
+	private final static HashMap<Integer, HistoryObject> historyObjects = new HashMap<>();
+	private final static HashMap<Integer, String> p1Paths = new HashMap<>();
+	private final static HashMap<Integer, String> p2Paths = new HashMap<>();
 	private static int endNodeId;
 	private static int steps;
 	private static int numberOfNodes;
 	private static boolean possible = true;
-	private static boolean connectionListEmpty = true;
+	private static boolean connectionHashMapEmpty = true;
 
 	public final static void main(String[] args) {
 		try {
-			final long startTime = System.currentTimeMillis();
 			final List<String> values = Files.readAllLines(testValuePath);
-//			String[] split = values.get(0).split(" ");
-			numberOfNodes = Integer.parseInt(values.get(0).split(" ")[0]);
+			final long startTime = System.currentTimeMillis();
+			String string = values.get(0);
+			numberOfNodes = Integer.parseInt(string.substring(0, string.indexOf(' ')));
 			
 			// remove first element in list (number of nodes, connections)
 			values.remove(0);
@@ -69,13 +66,13 @@ public class Huepfburg {
 		do {
 			//For Paths
 			final HistoryObject historyObject = new HistoryObject((BitSet)p1.clone(),(BitSet)p2.clone());
-			if(historyObjects.contains(historyObject)) {
+			if(historyObjects.containsValue(historyObject)) {
 				System.out.println("This is impossible.");
 				System.out.println("Loops at state: " + historyObject);
 				possible = false;
 				return;
 			}
-			historyObjects.add(historyObject);
+			historyObjects.put(Integer.valueOf(steps), historyObject);
 			
 			//Count the steps
 			steps++;
@@ -85,7 +82,7 @@ public class Huepfburg {
 			flipBits(p1, toChange);
 			flipBits(p2, toChange);
 		}while(!p1.intersects(p2));
-		historyObjects.add(new HistoryObject((BitSet)p1.clone(),(BitSet)p2.clone()));
+		historyObjects.put(Integer.valueOf(steps),new HistoryObject((BitSet)p1.clone(),(BitSet)p2.clone()));
 		endNodeId = getEndNode().getId();
 		final BitSet bitSet1 = new BitSet(numberOfNodes);
 		bitSet1.set(1);
@@ -98,15 +95,15 @@ public class Huepfburg {
 	private final static void flipBits(final BitSet player, final List<Node> toChange) {
 		//For each bit that is true -> get the index (which is the nodeId) -> get the corresponding node and get the neighbors
 		//get the id of those neighbors and flip the corresponding bits from false to true. And flip the orignal node to false
-		player.stream().forEach(indexThatIsTrue -> {
-			final Node node = getNode(indexThatIsTrue);
+		player.stream().forEach(trueIndex -> {
+			final Node node = getNode(trueIndex);
 			if(node.getId() != -1) {
 				toChange.addAll(getNeighbors(node));
 			}
-			player.clear(indexThatIsTrue);
+			player.clear(trueIndex);
 		});
-		toChange.stream().forEach(nodeNeighbor -> {
-			player.set(nodeNeighbor.getId());
+		toChange.stream().forEach(neighbor -> {
+			player.set(neighbor.getId());
 		});
 		toChange.clear();
 	}
@@ -114,14 +111,14 @@ public class Huepfburg {
 	public final static void buildPath(BitSet bitSet, String path, int depth) {
 		final int newDepth = depth + 1;
 		final BitSet nodesId = (BitSet)bitSet.clone();
-		 String nodeIdInCurlyBraces = nodesId.toString();
-		 nodeIdInCurlyBraces = nodeIdInCurlyBraces.replace('{', ' ');
-		 nodeIdInCurlyBraces = nodeIdInCurlyBraces.replace('}', ' ');
-		 nodeIdInCurlyBraces = nodeIdInCurlyBraces.trim();
-		if( nodeIdInCurlyBraces.isEmpty() ) {
+		 String nodeIdinCB = nodesId.toString();
+		 nodeIdinCB = nodeIdinCB.replace('{', ' ');
+		 nodeIdinCB = nodeIdinCB.replace('}', ' ');
+		 nodeIdinCB = nodeIdinCB.trim();
+		if( nodeIdinCB.isEmpty() ) {
 			return;
 		}
-		final List<Node> neighbors = getNeighbors(getNode(Integer.parseInt(nodeIdInCurlyBraces)));
+		final List<Node> neighbors = getNeighbors(getNode(Integer.parseInt(nodeIdinCB)));
 		//Keine Ahnung warum es nicht klappt. Irgendwas mit depth funktioniert nicht richtig und er findet nicht den  optimalsten Pfad.... debug
 		for( final Node node : neighbors ) {
 			final int nodeId = node.getId();
@@ -130,10 +127,10 @@ public class Huepfburg {
 				if( nodeId == endNodeId ) {
 					//Ist nicht der kuerzeste sondern der erste
 					if( path.startsWith("1") ) {
-						p1Paths.add(path + " -> " + nodeId);
+						p1Paths.put(Integer.valueOf(newDepth),path + " -> " + nodeId);
 					}
 					else {
-						p2Paths.add(path + " -> " + nodeId);
+						p2Paths.put(Integer.valueOf(newDepth),path + " -> " + nodeId);
 					}
 					return;
 				}
@@ -149,14 +146,14 @@ public class Huepfburg {
 	public final static void finish() {
 		System.out.println("Zielknoten: " + endNodeId);
 		System.out.println("Schritte: " + steps);
-		System.out.println("Spieler 1: " + p1Paths.get(0));
-		System.out.println("Spieler 2: " + p2Paths.get(0));
+		System.out.println("Spieler 1: " + p1Paths.values().toString());
+		System.out.println("Spieler 2: " + p2Paths.values().toString());
 	}
 	
 	private final static Node getEndNode() {
 		//Letztes historyObject vergleichen und gucken welcher Node/bit gleich ist
 		final int historyObjectsSize = historyObjects.size();
-		final HistoryObject lastHistoryObject = historyObjects.get(historyObjectsSize-1);
+		final HistoryObject lastHistoryObject = historyObjects.get(Integer.valueOf(historyObjectsSize-1));
 		final BitSet intersection = (BitSet)lastHistoryObject.p1.clone();
 		intersection.and(lastHistoryObject.p2);
 		final String nodeNumberInCurlyBraces = intersection.toString();
@@ -167,7 +164,7 @@ public class Huepfburg {
 		//What if there are more possible end nodes
 		if( nodeNumber.contains(",") ) {
 			//just get the first
-			return getNode(Integer.parseInt(nodeNumber.split(", ")[0]));
+			return getNode(Integer.parseInt(nodeNumber.substring(0, nodeNumber.indexOf(','))));
 		}
 		else {
 			return getNode(Integer.parseInt(nodeNumber));
@@ -176,45 +173,45 @@ public class Huepfburg {
 	
 	public final static List<Node> getNeighbors(Node node) {
 		final List<Node> result = new ArrayList<>();
-		if(connectionListEmpty) {
+		if(connectionHashMapEmpty) {
 			System.err.println("No connections available");
 			System.exit(1);
 		}
-		final List<Connection> clonedConnectionList = new ArrayList<>(connectionList);
-		// add the neighbors to result
-		for( Connection connection : clonedConnectionList ) {
+		for( Connection connection : connectionList.values() ) {
 			if( connection.getSource().equals(node) ) {
 				result.add(connection.getTarget());
 			}
 		}
 		return result;
+//		final HashMap<Integer, List<Connection>> clonedConnectionHashMap = new HashMap<>(connectionList);
+//		// add the neighbors to result
+//		List<Connection> values = clonedConnectionHashMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
 	}
 	
-	//gets node if it already exists or creates it
+	//gets node if it exists or return a -1 object
 	public final static Node getNode(int id) {
-		for( Node node : nodeList ) {
+		for( Node node : nodeList.values() ) {
 			if( node.getId() == id ) {
 				return node;
 			}
 		}
-		//test
-		//Can happen if the node is a dead end
 		return new Node(-1);
 	}
 	
 	public final static void makeNodesAndConnections(String line) {
-		final String[] ids = line.split(" ");
-		final String knoten = ids[0];
-		final String zielKnoten = ids[1];
-		final Node newNode = new Node(Integer.parseInt(knoten));
+		int emptySpaceIndex = line.indexOf(' ');
+		final String node = line.substring(0, emptySpaceIndex);
+		//+1 to not get the empty space
+		final String target = line.substring(emptySpaceIndex+1, line.length());
+		final Node newNode = new Node(Integer.parseInt(node));
 		//HashMap would be faster
-		if (!nodeList.contains(newNode)) {
-			nodeList.add(newNode);
+		if (!nodeList.containsValue(newNode)) {
+			nodeList.put(Integer.valueOf(nodeList.size()),newNode);
 		}
-		final Connection newConnection = new Connection(new Node(Integer.parseInt(knoten)), new Node(Integer.parseInt(zielKnoten)));
-		if( !connectionList.contains(newConnection) ) {
-			connectionList.add(newConnection);
-			connectionListEmpty = false;
+		final Connection newConnection = new Connection(new Node(Integer.parseInt(node)), new Node(Integer.parseInt(target)));
+		if( !connectionList.containsValue(newConnection) ) {
+			connectionList.put(Integer.valueOf(connectionList.size()), newConnection);
+			connectionHashMapEmpty = false;
 		}
 	}
 }

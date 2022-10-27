@@ -6,37 +6,30 @@ package node;
  */
 public class Node {
 
-	public int id;
+	private final int id;
 
 	public Node(int id) {
 		this.id = id;
 
 	}
 
-	public void setId(int id) {
-		this.id = id;
-	}
-
 	public int getId() {
 		return id;
 	}
 
-
-
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) {
+		if( this == obj ) {
 			return true;
 		}
-		if (!(obj instanceof Node)) {
+		if( !(obj instanceof Node) ) {
 			return false;
 		}
 		Node node = (Node) obj;
-		if (this.getId() == node.getId()) {
+		if( this.getId() == node.getId() ) {
 			return true;
-		} else {
-			return false;
-		}
+		} 
+		return false;
 	}
 
 }
