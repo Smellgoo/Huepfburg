@@ -29,7 +29,7 @@ public final class Huepfburg {
 			startTime = System.currentTimeMillis();
 			//read test file
 			List<String> values = new ArrayList<>();
-			try( final BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream("src/testValues4.txt/"), StandardCharsets.UTF_8)); ){
+			try( final BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream("src/testValues1.txt/"), StandardCharsets.UTF_8)); ){
 				String line;
 				while ((line = in.readLine()) != null) {
 					values.add(line);
@@ -60,7 +60,7 @@ public final class Huepfburg {
 		}
 	}
 	
-	public static void walk() {
+	private static void walk() {
 		BitSet p1 = new BitSet(numberOfNodes);
 		p1.set(1);
 		BitSet p2 = new BitSet(numberOfNodes);
@@ -111,7 +111,7 @@ public final class Huepfburg {
 		toChange.clear();
 	}
 	
-	public static void buildPath(BitSet bitSet, String path, int depth) {
+	private static void buildPath(BitSet bitSet, String path, int depth) {
 		int newDepth = depth + 1;
 		BitSet nodesId = (BitSet)bitSet.clone();
 		String nodeIdinCB = nodesId.toString();
@@ -146,7 +146,7 @@ public final class Huepfburg {
 		return;
 	}
 	
-	public static void finish() {
+	private static void finish() {
 		System.out.println("Zielknoten: " + endNodeId);
 		System.out.println("Schritte: " + steps);
 		System.out.println("Spieler 1: " + p1Paths.get(0));
@@ -174,7 +174,7 @@ public final class Huepfburg {
 		}
 	}
 	
-	public static List<Node> getNeighbors(Node node) {
+	private static List<Node> getNeighbors(Node node) {
 		List<Node> result = new ArrayList<>();
 		if(connectionHashMapEmpty) {
 			System.err.println("No connections available");
@@ -189,7 +189,7 @@ public final class Huepfburg {
 	}
 	
 	//gets node if it exists or return a -1 object
-	public static Node getNode(int id) {
+	private static Node getNode(int id) {
 		for( Node node : nodeList ) {
 			if( node.getId() == id ) {
 				return node;
@@ -198,7 +198,7 @@ public final class Huepfburg {
 		return new Node(-1);
 	}
 	
-	public static void makeNodesAndConnections(List<String> values) {
+	private static void makeNodesAndConnections(List<String> values) {
 		for( String line : values ) {
 			int emptySpaceIndex = line.indexOf(' ');
 			String node = line.substring(0, emptySpaceIndex);

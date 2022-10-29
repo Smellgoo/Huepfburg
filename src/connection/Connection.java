@@ -6,7 +6,7 @@ import node.*;
  * @author <a href="mailto:Leon.Havel@Materna.DE">Leon Havel</a>
  *
  */
-public class Connection {
+public final class Connection {
 
 	private final Node source;
 	private final Node target;
@@ -38,5 +38,10 @@ public class Connection {
 			return true;
 		}
 		return false;
+	}
+	
+	@Override
+	public String toString() {
+		return source + " " + target;
 	}
 }

@@ -4,7 +4,7 @@ package node;
  * @author <a href="mailto:Leon.Havel@Materna.DE">Leon Havel</a>
  *
  */
-public class Node {
+public final class Node {
 
 	private final int id;
 
@@ -32,4 +32,9 @@ public class Node {
 		return false;
 	}
 
+	@Override
+	public String toString() {
+		return String.valueOf(id);
+	}
+	
 }

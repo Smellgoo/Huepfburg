@@ -6,7 +6,7 @@ import java.util.*;
  * @author <a href="mailto:Leon.Havel@Materna.DE">Leon Havel</a>
  *
  */
-public class HistoryObject {
+public final class HistoryObject {
 
 	public final BitSet p1;
 	public final BitSet p2;
