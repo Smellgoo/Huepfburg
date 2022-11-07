@@ -1,16 +1,19 @@
 package huepfburg;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.*;
 import java.util.*;
+
+import javax.swing.*;
+import javax.swing.filechooser.*;
 
 import connection.*;
 import historyobject.*;
 import node.*;
 
+
 /**
  * @author <a href="mailto:Leon.Havel@Materna.DE">Leon Havel</a>
- *
  */
 public final class Huepfburg {
 	private final static List<Node> nodeList = new ArrayList<>();
@@ -22,44 +25,37 @@ public final class Huepfburg {
 	private static int endNodeId;
 	private static int steps;
 	private static int numberOfNodes;
-	private static long startTime;
 
 	public final static void main(String[] args) {
 		try {
-			startTime = System.currentTimeMillis();
 			//read test file
-			List<String> values = new ArrayList<>();
-			try( final BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream("src/testValues1.txt/"), StandardCharsets.UTF_8)); ){
-				String line;
-				while ((line = in.readLine()) != null) {
-					values.add(line);
-				}
-			}
-			
+			List<String> values = readTestFile();
+
 			//get number of nodes
 			String string = values.get(0);
 			numberOfNodes = Integer.parseInt(string.substring(0, string.indexOf(' ')));
-			
+
 			// remove first element in list (number of nodes, connections)
 			values.remove(0);
 
 			// convert lines to nodes and connections
 			makeNodesAndConnections(values);
-			
-			//walk
+
+			//simulate each player taking steps
 			walk();
 
 			//present findings
 			finish();
-			
-			System.out.println("Total execution time: " + (System.currentTimeMillis() - startTime));
 		}
-		catch( IOException e) {
-			System.err.println("Fehler beim einlesen der Testdatei");
+		catch( Exception e1 ) {
+			System.err.println("Fehler beim verarbeiten der Test-Datei");
 			System.exit(1);
 		}
 	}
-	
+
+	/**
+	 * Simulate two players taking steps in a graph.
+	 */
 	private static void walk() {
 		BitSet p1 = new BitSet(numberOfNodes);
 		p1.set(1);
@@ -67,26 +63,26 @@ public final class Huepfburg {
 		p2.set(2);
 		steps = 0;
 		do {
-			//For Paths
-			HistoryObject historyObject = new HistoryObject((BitSet)p1.clone(),(BitSet)p2.clone());
-			if(historyObjects.contains(historyObject)) {
+			//For infinite loop detection
+			HistoryObject historyObject = new HistoryObject((BitSet)p1.clone(), (BitSet)p2.clone());
+			if( historyObjects.contains(historyObject) ) {
 				System.out.println("This is impossible.");
 				System.out.println("Loops at state: " + historyObject);
-				System.out.println("Total execution time: " + (System.currentTimeMillis() - startTime));
 				System.exit(0);
 			}
 			historyObjects.add(historyObject);
-			
-			//Count the steps
+
+			//Count steps
 			steps++;
-			
+
 			//Set bits accordingly
 			List<Node> toChange = new ArrayList<>();
 			flipBits(p1, toChange);
 			flipBits(p2, toChange);
-		}while(!p1.intersects(p2));
-		historyObjects.add(new HistoryObject((BitSet)p1.clone(),(BitSet)p2.clone()));
+		}while( !p1.intersects(p2) );
+		historyObjects.add(new HistoryObject((BitSet)p1.clone(), (BitSet)p2.clone()));
 		endNodeId = getEndNode().getId();
+		//For paths
 		BitSet bitSet1 = new BitSet(numberOfNodes);
 		bitSet1.set(1);
 		buildPath(bitSet1, "1", 0);
@@ -95,12 +91,18 @@ public final class Huepfburg {
 		buildPath(bitSet2, "2", 0);
 	}
 
+	/**
+	 * For each index of the <code>BitSet</code> that is set to true, we get the corresponding <code>Node</code> and that <code>Node's</code> the neighbors.<br>
+	 * Then we "flip" each index that was set to true, to false.<br>
+	 * And finally, we set for each Neighbor the corresponding index to true.
+	 * 
+	 * @param player
+	 * @param toChange
+	 */
 	private static void flipBits(BitSet player, List<Node> toChange) {
-		//For each bit that is true -> get the index (which is the nodeId) -> get the corresponding node and get the neighbors
-		//get the id of those neighbors and flip the corresponding bits from false to true. And flip the orignal node to false
 		player.stream().forEach(trueIndex -> {
 			Node node = getNode(trueIndex);
-			if(node.getId() != -1) {
+			if( node.getId() != -1 ) {
 				toChange.addAll(getNeighbors(node));
 			}
 			player.clear(trueIndex);
@@ -110,7 +112,15 @@ public final class Huepfburg {
 		}
 		toChange.clear();
 	}
-	
+
+	/**
+	 * Recursively "walk" down a path.<br>
+	 * We know the number of steps it takes and the id of the final <code>Node</code>.
+	 * 
+	 * @param bitSet
+	 * @param path
+	 * @param depth
+	 */
 	private static void buildPath(BitSet bitSet, String path, int depth) {
 		int newDepth = depth + 1;
 		BitSet nodesId = (BitSet)bitSet.clone();
@@ -118,17 +128,14 @@ public final class Huepfburg {
 		nodeIdinCB = nodeIdinCB.replace('{', ' ');
 		nodeIdinCB = nodeIdinCB.replace('}', ' ');
 		nodeIdinCB = nodeIdinCB.trim();
-		if (nodeIdinCB.isEmpty()) {
+		if( nodeIdinCB.isEmpty() ) {
 			return;
 		}
 		List<Node> neighbors = getNeighbors(getNode(Integer.parseInt(nodeIdinCB)));
-		//Keine Ahnung warum es nicht klappt. Irgendwas mit depth funktioniert nicht richtig und er findet nicht den  optimalsten Pfad.... debug
 		for( Node node : neighbors ) {
 			int nodeId = node.getId();
-			//are you done?
 			if( newDepth == steps ) {
 				if( nodeId == endNodeId ) {
-					//Ist nicht der kuerzeste sondern der erste
 					if( path.startsWith("1") ) {
 						p1Paths.add(path + " -> " + nodeId);
 					}
@@ -145,26 +152,31 @@ public final class Huepfburg {
 		}
 		return;
 	}
-	
+
+
 	private static void finish() {
 		System.out.println("Zielknoten: " + endNodeId);
 		System.out.println("Schritte: " + steps);
 		System.out.println("Spieler 1: " + p1Paths.get(0));
 		System.out.println("Spieler 2: " + p2Paths.get(0));
 	}
-	
+
+	/**
+	 * We get the node by checking at which index both <code>BitSet</code> are set to true.<br>
+	 * There could be multiple but we just get the first.
+	 * 
+	 * @return
+	 */
 	private static Node getEndNode() {
-		//Letztes historyObject vergleichen und gucken welcher Node/bit gleich ist
 		int historyObjectsSize = historyObjects.size();
-		HistoryObject lastHistoryObject = historyObjects.get(Integer.valueOf(historyObjectsSize-1));
+		HistoryObject lastHistoryObject = historyObjects.get(historyObjectsSize - 1);
 		BitSet intersection = (BitSet)lastHistoryObject.p1.clone();
 		intersection.and(lastHistoryObject.p2);
 		String nodeNumberInCurlyBraces = intersection.toString();
-		//Zielnode
 		String nodeNumber = nodeNumberInCurlyBraces.replace('{', ' ');
 		nodeNumber = nodeNumber.replace('}', ' ');
 		nodeNumber = nodeNumber.trim();
-		//What if there are more possible end nodes
+		//If there are more possible end nodes...
 		if( nodeNumber.contains(",") ) {
 			//just get the first
 			return getNode(Integer.parseInt(nodeNumber.substring(0, nodeNumber.indexOf(','))));
@@ -173,10 +185,17 @@ public final class Huepfburg {
 			return getNode(Integer.parseInt(nodeNumber));
 		}
 	}
-	
+
+
+	/**
+	 * We get every "Target" of a <code>Connection</code> with the <code>Node</code> as the "Source" of the <code>Connection</code>.
+	 * 
+	 * @param node
+	 * @return
+	 */
 	private static List<Node> getNeighbors(Node node) {
 		List<Node> result = new ArrayList<>();
-		if(connectionHashMapEmpty) {
+		if( connectionHashMapEmpty ) {
 			System.err.println("No connections available");
 			System.exit(3);
 		}
@@ -187,8 +206,14 @@ public final class Huepfburg {
 		}
 		return result;
 	}
-	
-	//gets node if it exists or return a -1 object
+
+
+	/**
+	 * Get the <code>Node</code> from the Node-List if a <code>Node</code> with that Id exists.<br>
+	 * Otherwise return a <code>Node</code> with the Id -1.
+	 * @param id
+	 * @return
+	 */
 	private static Node getNode(int id) {
 		for( Node node : nodeList ) {
 			if( node.getId() == id ) {
@@ -197,20 +222,58 @@ public final class Huepfburg {
 		}
 		return new Node(-1);
 	}
-	
+
+
+	/**
+	 * This method converts every line in a test file into <code>Node's</code> and <code>Connection's</code>.<br>
+	 * <pre>Line:"1 2" to <code>Node</code> with Id 1</pre> and <code>Connection</code> with <pre><code>Node</code> Id 1 and <code>Node</code> Id 2</pre></pre>
+	 * 
+	 * @param values
+	 */
 	private static void makeNodesAndConnections(List<String> values) {
 		for( String line : values ) {
 			int emptySpaceIndex = line.indexOf(' ');
 			String node = line.substring(0, emptySpaceIndex);
 			//+1 to not get the empty space
-			String target = line.substring(emptySpaceIndex+1, line.length());
+			String target = line.substring(emptySpaceIndex + 1, line.length());
 			Node newNode = new Node(Integer.parseInt(node));
-			if(! nodeList.contains(newNode) ) {
+			if( !nodeList.contains(newNode) ) {
 				nodeList.add(newNode);
 			}
 			Connection newConnection = new Connection(newNode, new Node(Integer.parseInt(target)));
 			connectionList.add(newConnection);
 			connectionHashMapEmpty = false;
 		}
+	}
+
+	/**
+	 * Let the user choose the test file and converts the lines into an <code>ArrayList&ltString&gt</code>
+	 * 
+	 * @return
+	 * @throws IOException
+	 * @throws FileNotFoundException
+	 */
+	
+	private static List<String> readTestFile() throws IOException, FileNotFoundException {
+		JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+
+		int returnValue = jfc.showOpenDialog(null);
+		File selectedFile = null;
+		if( returnValue == JFileChooser.APPROVE_OPTION ) {
+			selectedFile = jfc.getSelectedFile();
+		}
+		else {
+			System.out.println("Please choose a test file.");
+			System.exit(0);
+		}
+		//read test file
+		List<String> values = new ArrayList<>();
+		try (final BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(selectedFile), StandardCharsets.UTF_8));) {
+			String line;
+			while( (line = in.readLine()) != null ) {
+				values.add(line);
+			}
+		}
+		return values;
 	}
 }

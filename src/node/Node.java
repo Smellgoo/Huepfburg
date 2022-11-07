@@ -2,7 +2,6 @@ package node;
 
 /**
  * @author <a href="mailto:Leon.Havel@Materna.DE">Leon Havel</a>
- *
  */
 public final class Node {
 
@@ -25,10 +24,10 @@ public final class Node {
 		if( !(obj instanceof Node) ) {
 			return false;
 		}
-		Node node = (Node) obj;
+		Node node = (Node)obj;
 		if( this.getId() == node.getId() ) {
 			return true;
-		} 
+		}
 		return false;
 	}
 
@@ -36,5 +35,4 @@ public final class Node {
 	public String toString() {
 		return String.valueOf(id);
 	}
-	
 }

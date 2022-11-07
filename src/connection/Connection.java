@@ -2,9 +2,9 @@ package connection;
 
 import node.*;
 
+
 /**
  * @author <a href="mailto:Leon.Havel@Materna.DE">Leon Havel</a>
- *
  */
 public final class Connection {
 
@@ -33,13 +33,13 @@ public final class Connection {
 		if( !(obj instanceof Connection) ) {
 			return false;
 		}
-		Connection connection = (Connection) obj;
+		Connection connection = (Connection)obj;
 		if( this.getSource() == connection.getSource() && this.getTarget() == connection.getTarget() ) {
 			return true;
 		}
 		return false;
 	}
-	
+
 	@Override
 	public String toString() {
 		return source + " " + target;
