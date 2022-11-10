@@ -28,27 +28,30 @@ public final class Huepfburg {
 
 	public final static void main(String[] args) {
 		try {
-			//read test file
+			// Easier for the eyes...
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			
+			// Read test file
 			List<String> values = readTestFile();
 
-			//get number of nodes
+			// Get number of nodes
 			String string = values.get(0);
 			numberOfNodes = Integer.parseInt(string.substring(0, string.indexOf(' ')));
 
-			// remove first element in list (number of nodes, connections)
+			// Remove first element in list (number of nodes, connections)
 			values.remove(0);
 
-			// convert lines to nodes and connections
+			// Convert lines to nodes and connections
 			makeNodesAndConnections(values);
 
-			//simulate each player taking steps
+			// Simulate each player taking steps
 			walk();
 
-			//present findings
+			// Present findings
 			finish();
 		}
 		catch( Exception e1 ) {
-			System.err.println("Fehler beim verarbeiten der Test-Datei");
+			System.err.println("Fehler beim verarbeiten der Testdatei.\nBitte stellen Sie sicher, dass es sich um eine Textdatei mit Testdaten handelt.");
 			System.exit(1);
 		}
 	}
@@ -63,26 +66,26 @@ public final class Huepfburg {
 		p2.set(2);
 		steps = 0;
 		do {
-			//For infinite loop detection
+			// For infinite loop detection
 			HistoryObject historyObject = new HistoryObject((BitSet)p1.clone(), (BitSet)p2.clone());
 			if( historyObjects.contains(historyObject) ) {
-				System.out.println("This is impossible.");
-				System.out.println("Loops at state: " + historyObject);
+				System.out.println("Es ist unmöglich.");
+				System.out.println("Wiederholt sich beim Zustand: " + historyObject);
 				System.exit(0);
 			}
 			historyObjects.add(historyObject);
 
-			//Count steps
+			// Count steps
 			steps++;
 
-			//Set bits accordingly
+			// Set bits accordingly
 			List<Node> toChange = new ArrayList<>();
 			flipBits(p1, toChange);
 			flipBits(p2, toChange);
 		}while( !p1.intersects(p2) );
 		historyObjects.add(new HistoryObject((BitSet)p1.clone(), (BitSet)p2.clone()));
 		endNodeId = getEndNode().getId();
-		//For paths
+		// For paths
 		BitSet bitSet1 = new BitSet(numberOfNodes);
 		bitSet1.set(1);
 		buildPath(bitSet1, "1", 0);
@@ -157,8 +160,8 @@ public final class Huepfburg {
 	private static void finish() {
 		System.out.println("Zielknoten: " + endNodeId);
 		System.out.println("Schritte: " + steps);
-		System.out.println("Spieler 1: " + p1Paths.get(0));
-		System.out.println("Spieler 2: " + p2Paths.get(0));
+		System.out.println("\nSpieler 1: " + p1Paths.get(0));
+		System.out.println("\nSpieler 2: " + p2Paths.get(0));
 	}
 
 	/**
@@ -170,15 +173,15 @@ public final class Huepfburg {
 	private static Node getEndNode() {
 		int historyObjectsSize = historyObjects.size();
 		HistoryObject lastHistoryObject = historyObjects.get(historyObjectsSize - 1);
-		BitSet intersection = (BitSet)lastHistoryObject.p1.clone();
-		intersection.and(lastHistoryObject.p2);
+		BitSet intersection = (BitSet)lastHistoryObject.p1().clone();
+		intersection.and(lastHistoryObject.p2());
 		String nodeNumberInCurlyBraces = intersection.toString();
 		String nodeNumber = nodeNumberInCurlyBraces.replace('{', ' ');
 		nodeNumber = nodeNumber.replace('}', ' ');
 		nodeNumber = nodeNumber.trim();
-		//If there are more possible end nodes...
+		// If there are more possible end nodes...
 		if( nodeNumber.contains(",") ) {
-			//just get the first
+			// Just get the first
 			return getNode(Integer.parseInt(nodeNumber.substring(0, nodeNumber.indexOf(','))));
 		}
 		else {
@@ -196,7 +199,7 @@ public final class Huepfburg {
 	private static List<Node> getNeighbors(Node node) {
 		List<Node> result = new ArrayList<>();
 		if( connectionHashMapEmpty ) {
-			System.err.println("No connections available");
+			System.err.println("Keine Connection's verfügbar.");
 			System.exit(3);
 		}
 		for( Connection connection : connectionList ) {
@@ -234,7 +237,7 @@ public final class Huepfburg {
 		for( String line : values ) {
 			int emptySpaceIndex = line.indexOf(' ');
 			String node = line.substring(0, emptySpaceIndex);
-			//+1 to not get the empty space
+			// +1 to not get the empty space
 			String target = line.substring(emptySpaceIndex + 1, line.length());
 			Node newNode = new Node(Integer.parseInt(node));
 			if( !nodeList.contains(newNode) ) {
@@ -248,27 +251,27 @@ public final class Huepfburg {
 
 	/**
 	 * Let the user choose the test file and converts the lines into an <code>ArrayList&ltString&gt</code>
-	 * 
 	 * @return
 	 * @throws IOException
 	 * @throws FileNotFoundException
 	 */
-	
 	private static List<String> readTestFile() throws IOException, FileNotFoundException {
 		JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-
+		jfc.setDialogTitle("Bitte wähle eine Testdatei aus:");
 		int returnValue = jfc.showOpenDialog(null);
 		File selectedFile = null;
 		if( returnValue == JFileChooser.APPROVE_OPTION ) {
 			selectedFile = jfc.getSelectedFile();
 		}
 		else {
-			System.out.println("Please choose a test file.");
+			System.out.println("Sie haben keine Testdatei ausgewählt.");
 			System.exit(0);
 		}
-		//read test file
 		List<String> values = new ArrayList<>();
-		try (final BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(selectedFile), StandardCharsets.UTF_8));) {
+
+		try (	final FileInputStream fis = new FileInputStream(selectedFile);
+				final InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
+				final BufferedReader in = new BufferedReader(isr);) {
 			String line;
 			while( (line = in.readLine()) != null ) {
 				values.add(line);
